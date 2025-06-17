@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Daily Tracker</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background-image: url('https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=1500&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      position: relative;
+      z-index: 0;
+      color: #000;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: -1;
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #fff;
+    }
+    input, button {
+      padding: 8px;
+      margin: 5px;
+      font-size: 14px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    input[readonly] {
+      background-color: #e9ecef;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: white;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #eee;
+    }
+    tfoot td {
+      font-weight: bold;
+      background-color: #d4ffd4;
+    }
+    .tabs {
+      margin-bottom: 20px;
+    }
+    .tab-button {
+      background: #ddd;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      margin-right: 10px;
+      border-radius: 4px;
+    }
+    .tab-button.active {
+      background: #4caf50;
+      color: white;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .bulk-btn {
+      margin: 10px 0;
+      background-color: #ff4d4d;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h2>📒 Daily Finance Tracker</h2>
+
+<div class="tabs">
+  <button class="tab-button active" onclick="switchTab('kharcha')">💰 Daily Kharcha</button>
+  <button class="tab-button" onclick="switchTab('borrow')">📥 Borrowed Amount</button>
+  <button class="tab-button" onclick="switchTab('lent')">📤 Lent Money</button>
+</div>
+
+<!-- Kharcha Tab -->
+<div id="kharcha" class="tab-content active">
+  <label>Date: <input type="text" id="dateInput" readwrite></label>
+  <label>Amount: <input type="number" id="amountInput"></label>
+  <label>Description: <input type="text" id="descInput" placeholder="e.g., Tea, Recharge"></label>
+  <button onclick="addKharcha()">➕ Add Entry</button>
+  <button class="bulk-btn" onclick="deleteSelected('kharcha')">🗑️ Delete Selected</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="selectAllKharcha" onclick="toggleAll('kharcha')"></th>
+        <th>Date</th>
+        <th>Amount</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody id="kharchaBody"></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="2">Total</td>
+        <td id="totalKharcha">0</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<!-- Borrow Tab -->
+<div id="borrow" class="tab-content">
+  <label>Date: <input type="text" id="borrowDateInput"></label>
+  <label>Amount: <input type="number" id="borrowAmountInput" placeholder="e.g., 500"></label>
+  <label>From Whom: <input type="text" id="fromWhomInput" placeholder="e.g., Ram"></label>
+  <button onclick="addBorrow()">➕ Add Borrow</button>
+  <button class="bulk-btn" onclick="deleteSelected('borrow')">🗑️ Delete Selected</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="selectAllBorrow" onclick="toggleAll('borrow')"></th>
+        <th>Date</th>
+        <th>Amount</th>
+        <th>From</th>
+      </tr>
+    </thead>
+    <tbody id="borrowBody"></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="2">Total</td>
+        <td id="totalBorrow">0</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<!-- Lent Tab -->
+<div id="lent" class="tab-content">
+  <label>Date: <input type="text" id="lentDateInput"></label>
+  <label>Amount: <input type="number" id="lentAmountInput" placeholder="e.g., 500"></label>
+  <label>To Whom: <input type="text" id="toWhomInput" placeholder="e.g., Sita"></label>
+  <button onclick="addLent()">➕ Add Lent</button>
+  <button class="bulk-btn" onclick="deleteSelected('lent')">🗑️ Delete Selected</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="selectAllLent" onclick="toggleAll('lent')"></th>
+        <th>Date</th>
+        <th>Amount</th>
+        <th>To</th>
+      </tr>
+    </thead>
+    <tbody id="lentBody"></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="2">Total</td>
+        <td id="totalLent">0</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  let kharchaData = JSON.parse(localStorage.getItem('kharchaData') || "[]");
+  let borrowData = JSON.parse(localStorage.getItem('borrowData') || "[]");
+  let lentData = JSON.parse(localStorage.getItem('lentData') || "[]");
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+    document.getElementById(tab).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function getCurrentDate() {
+    return new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function saveAndRender() {
+    localStorage.setItem('kharchaData', JSON.stringify(kharchaData));
+    localStorage.setItem('borrowData', JSON.stringify(borrowData));
+    localStorage.setItem('lentData', JSON.stringify(lentData));
+    renderAll();
+  }
+
+  function renderAll() {
+    renderTable(kharchaData, 'kharchaBody', 'totalKharcha', 'kharcha');
+    renderTable(borrowData, 'borrowBody', 'totalBorrow', 'borrow');
+    renderTable(lentData, 'lentBody', 'totalLent', 'lent');
+  }
+
+  function renderTable(data, tbodyId, totalId, type) {
+    const tbody = document.getElementById(tbodyId);
+    tbody.innerHTML = '';
+    let total = 0;
+    data.forEach((item, i) => {
+      const tr = document.createElement('tr');
+      let desc = type === 'kharcha' ? item.description : (type === 'borrow' ? item.from : item.to);
+      tr.innerHTML = `
+        <td><input type="checkbox" class="${type}-checkbox" data-index="${i}"></td>
+        <td>${item.date}</td>
+        <td>${item.amount}</td>
+        <td>${desc}</td>`;
+      tbody.appendChild(tr);
+      total += item.amount;
+    });
+    document.getElementById(totalId).textContent = total.toLocaleString("en-IN");
+  }
+
+  function addKharcha() {
+    const amount = parseFloat(document.getElementById('amountInput').value);
+    const desc = document.getElementById('descInput').value.trim();
+    if (isNaN(amount) || !desc) return alert("Fill all fields!");
+    kharchaData.push({ date: getCurrentDate(), amount, description: desc });
+    document.getElementById('amountInput').value = '';
+    document.getElementById('descInput').value = '';
+    saveAndRender();
+  }
+
+  function addBorrow() {
+    const date = document.getElementById('borrowDateInput').value;
+    const amount = parseFloat(document.getElementById('borrowAmountInput').value);
+    const from = document.getElementById('fromWhomInput').value.trim();
+    if (!date || isNaN(amount) || !from) return alert("Fill all fields!");
+    borrowData.push({ date, amount, from });
+    document.getElementById('borrowDateInput').value = '';
+    document.getElementById('borrowAmountInput').value = '';
+    document.getElementById('fromWhomInput').value = '';
+    saveAndRender();
+  }
+
+  function addLent() {
+    const date = document.getElementById('lentDateInput').value;
+    const amount = parseFloat(document.getElementById('lentAmountInput').value);
+    const to = document.getElementById('toWhomInput').value.trim();
+    if (!date || isNaN(amount) || !to) return alert("Fill all fields!");
+    lentData.push({ date, amount, to });
+    document.getElementById('lentDateInput').value = '';
+    document.getElementById('lentAmountInput').value = '';
+    document.getElementById('toWhomInput').value = '';
+    saveAndRender();
+  }
+
+  function deleteSelected(type) {
+    const checkboxes = [...document.querySelectorAll(`.${type}-checkbox:checked`)];
+    if (!checkboxes.length) return alert("No items selected!");
+    const indexesToDelete = checkboxes.map(cb => +cb.dataset.index);
+    if (type === 'kharcha') kharchaData = kharchaData.filter((_, i) => !indexesToDelete.includes(i));
+    else if (type === 'borrow') borrowData = borrowData.filter((_, i) => !indexesToDelete.includes(i));
+    else if (type === 'lent') lentData = lentData.filter((_, i) => !indexesToDelete.includes(i));
+    saveAndRender();
+  }
+
+  function toggleAll(type) {
+    const master = document.getElementById(`selectAll${type.charAt(0).toUpperCase() + type.slice(1)}`);
+    document.querySelectorAll(`.${type}-checkbox`).forEach(cb => cb.checked = master.checked);
+  }
+
+  document.getElementById('dateInput').value = getCurrentDate();
+  flatpickr("#borrowDateInput", { dateFormat: "d M Y" });
+  flatpickr("#lentDateInput", { dateFormat: "d M Y" });
+  renderAll();
+</script>
+
+</body>
+</html>
